@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.11)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.15)
 
 LIST( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake )
 
@@ -14,8 +14,7 @@ SET_TARGET_PROPERTIES ( ${PROJECT_EXECUTABLES} PROPERTIES
 SET ( URDFREADER_SOURCES
 	urdfreader.cc
 	)
-
-find_package(urdfdom REQUIRED)
+find_package(urdfdom 2.3.3 REQUIRED)
 
 #SET (URDFREADER_DEPENDENCIES
 #	rbdl
@@ -24,59 +23,51 @@ find_package(urdfdom REQUIRED)
 
 ADD_EXECUTABLE (rbdl_urdfreader_util rbdl_urdfreader_util.cc)
 
-IF (RBDL_BUILD_STATIC)
-	ADD_LIBRARY ( rbdl_urdfreader-static STATIC ${URDFREADER_SOURCES} )
+# static library
+add_library(rbdl_urdfreader-static STATIC ${URDFREADER_SOURCES} )
+set_target_properties(rbdl_urdfreader-static PROPERTIES 
+POSITION_INDEPENDENT_CODE ON)
 
-	IF (NOT WIN32)
-		SET_TARGET_PROPERTIES ( rbdl_urdfreader-static PROPERTIES PREFIX "lib")
-	ENDIF (NOT WIN32)
-	SET_TARGET_PROPERTIES ( rbdl_urdfreader-static PROPERTIES OUTPUT_NAME "rbdl_urdfreader")
-
-	TARGET_LINK_LIBRARIES (rbdl_urdfreader-static
-		rbdl-static
-		${urdfdom_headers_TARGETS}
-		${urdfdom_TARGETS}
-		)
-
-	TARGET_LINK_LIBRARIES (rbdl_urdfreader_util
-		rbdl_urdfreader-static
-		rbdl-static
-		${urdfdom_headers_TARGETS}
-		${urdfdom_TARGETS}
-		)
-
-	INSTALL (TARGETS rbdl_urdfreader-static rbdl_urdfreader_util
-		RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  	ARCHIVE DESTINATION ${CMAKE_INSTALL_BINDIR}
+TARGET_LINK_LIBRARIES (rbdl_urdfreader-static
+	rbdl-static
+	${urdfdom_headers_TARGETS}
+	${urdfdom_TARGETS}
 	)
-ELSE (RBDL_BUILD_STATIC)
-	ADD_LIBRARY ( rbdl_urdfreader SHARED ${URDFREADER_SOURCES} )
-	SET_TARGET_PROPERTIES ( rbdl_urdfreader PROPERTIES
-		VERSION ${RBDL_VERSION}
-		SOVERSION ${RBDL_SO_VERSION}
-  )
 
-	TARGET_LINK_LIBRARIES (rbdl_urdfreader
-		rbdl
-		${urdfdom_headers_TARGETS}
-		${urdfdom_TARGETS}
-		)
+TARGET_LINK_LIBRARIES (rbdl_urdfreader_util
+	rbdl_urdfreader-static
+	rbdl-static
+	${urdfdom_headers_TARGETS}
+	${urdfdom_TARGETS}
+	)
 
-	TARGET_LINK_LIBRARIES (rbdl_urdfreader_util
-		rbdl_urdfreader
-		${urdfdom_headers_TARGETS}
-		${urdfdom_TARGETS}
-		)
+INSTALL (TARGETS rbdl_urdfreader_util rbdl_urdfreader-static EXPORT rbdl
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	ARCHIVE 
+		DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
 
-	INSTALL (TARGETS rbdl_urdfreader rbdl_urdfreader_util EXPORT rbdl_urdfreader
-		RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-		LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-		INCLUDES DESTINATION include
-		)
-	install(EXPORT rbdl_urdfreader
-			FILE rbdl_urdfreaderConfig.cmake
-			DESTINATION ${CMAKE_INSTALL_PREFIX})
-ENDIF (RBDL_BUILD_STATIC)
+# Shared library
+add_library (rbdl_urdfreader-shared SHARED ${URDFREADER_SOURCES} )
+SET_TARGET_PROPERTIES (rbdl_urdfreader-shared PROPERTIES
+	VERSION ${RBDL_VERSION}
+	SOVERSION ${RBDL_SO_VERSION}
+	POSITION_INDEPENDENT_CODE ON
+)
+
+TARGET_LINK_LIBRARIES (rbdl_urdfreader-shared
+	rbdl-shared
+	${urdfdom_headers_TARGETS}
+	${urdfdom_TARGETS}
+	)
+
+INSTALL (TARGETS rbdl_urdfreader-shared EXPORT rbdl
+	LIBRARY 
+		DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	INCLUDES DESTINATION include
+	)
+
+
 
 FILE ( GLOB headers
 	"${CMAKE_CURRENT_SOURCE_DIR}/*.h"
