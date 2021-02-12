@@ -204,10 +204,10 @@ INCLUDES DESTINATION include
 )
 install(EXPORT rbdl
       NAMESPACE rbdl::
-      FILE rbdlTargets.cmake
+      FILE rbdlConfig.cmake
       DESTINATION ${CMAKE_INSTALL_PREFIX})
-install(FILES ${CMAKE_SOURCE_DIR}/rbdlConfig.cmake
-      DESTINATION ${CMAKE_INSTALL_PREFIX})
+# install(FILES ${CMAKE_SOURCE_DIR}/rbdlConfig.cmake
+#       DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 IF (RBDL_STORE_VERSION)
   # Set versioning information that can be queried during runtime
